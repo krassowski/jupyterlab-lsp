@@ -27,7 +27,7 @@ JSON
 JSX
     ${def} =    Set Variable    xpath:(//span[contains(@class, 'cm-variable')][contains(text(), 'hello')])[last()]
     Editor Shows Features for Language    JSX    example.jsx    Diagnostics=Expression expected    Jump to Definition=${def}    Rename=${def}
-#Julia
+#    Julia
 #    ${def} =    Set Variable    xpath:(//span[contains(@class, 'cm-builtin')][contains(text(), 'add_together')])[last()]
 #    Editor Shows Features for Language    Julia    example.jl    Jump to Definition=${def}    Rename=${def}
 
@@ -50,6 +50,11 @@ Python
 R
     ${def} =    Set Variable    xpath:(//span[contains(@class, 'cm-variable')][contains(text(), 'fib')])[last()]
     Editor Shows Features for Language    R    example.R    Diagnostics=Put spaces around all infix operators    Jump to Definition=${def}
+
+Robot Framework
+    [Tags]    gh:332
+    ${def} =    Set Variable    xpath:(//span[contains(@class, 'cm-keyword')][contains(text(), 'Special Log')])[last()]
+    Editor Shows Features for Language    Robot Framework    example.robot    Diagnostics=Undefined keyword    Jump to Definition=${def}
 
 SCSS
     ${def} =    Set Variable    xpath:(//span[contains(@class, 'cm-variable-2')][contains(text(), 'primary-color')])[last()]
@@ -97,16 +102,18 @@ Editor Should Show Diagnostics
 
 Editor Content Changed
     [Arguments]    ${old_content}
-    ${new_content}    Get Editor Content
+    ${new_content} =    Get Editor Content
     Should Not Be Equal    ${old_content}    ${new_content}
     [Return]    ${new_content}
 
 Editor Should Rename
     [Arguments]    ${symbol}
     Set Tags    feature:rename
-    ${sel} =    Set Variable If    "${symbol}".startswith(("xpath", "css"))    ${symbol}    xpath:(//span[@role="presentation"][contains(., "${symbol}")])[last()]
+    ${sel} =    Set Variable If    "${symbol}".startswith(("xpath", "css"))
+    ...    ${symbol}
+    ...    xpath:(//span[@role="presentation"][contains(., "${symbol}")])[last()]
     Open Context Menu Over    ${sel}
-    ${old_content}    Get Editor Content
+    ${old_content} =    Get Editor Content
     Capture Page Screenshot    03-rename-0.png
     Mouse Over    ${MENU RENAME}
     Capture Page Screenshot    03-rename-1.png
@@ -115,5 +122,5 @@ Editor Should Rename
     Input Into Dialog    new_name
     Sleep    2s
     Capture Page Screenshot    03-rename-3.png
-    ${new_content}    Wait Until Keyword Succeeds    10 x    0.1 s    Editor Content Changed    ${old_content}
+    ${new_content} =    Wait Until Keyword Succeeds    10 x    0.1 s    Editor Content Changed    ${old_content}
     Should Be True    "new_name" in """${new_content}"""

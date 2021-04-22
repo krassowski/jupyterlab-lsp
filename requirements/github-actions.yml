@@ -5,6 +5,7 @@ channels:
   - nodefaults
 
 dependencies:
+  - python {python}
   - jupyterlab {lab}
   # build dependencies
   - pip
@@ -18,6 +19,12 @@ dependencies:
   - r-languageserver
   - r-stringi >=1.4.6
   - rpy2
+  # for robotframework
+  - robotframework >=4,<5
+  # rflsp not available for python 3.6
+  {robotframework-lsp}
+  {xeus_robot}
+  - jupyterlab_robotmode
   # tex
   - tectonic
   - texlab
@@ -33,7 +40,7 @@ dependencies:
   - bs4
   - firefox
   - geckodriver
-  - robotframework >=4
+  - robotframework >=4,<5
   - robotframework-seleniumlibrary
   # TODO: remove when jedi vs IPython vs python-language-server is resolved
   - jedi <0.18

@@ -1,5 +1,8 @@
 # acceptance test dependencies for jupyter_lsp
 -r ./lab.txt
 bs4
-robotframework >=4
+jupyterlab_robotmode
+robotframework-lsp
+robotframework >=4,<5
 robotframework-seleniumlibrary
+robotkernel
