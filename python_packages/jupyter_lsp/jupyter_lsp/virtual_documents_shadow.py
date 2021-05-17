@@ -139,7 +139,10 @@ def setup_shadow_filesystem(virtual_documents_uri):
             raise ShadowFilesystemError("Could not get URI from: {}".format(message))
 
         if not uri.startswith(virtual_documents_uri):
-            return
+            raise Exception(
+                f"{uri} does not start with: {virtual_documents_uri}"
+            )  # pragma: no cover
+            return  # pragma: no cover
 
         path = file_uri_to_path(uri)
         editable_file = EditableFile(path)
