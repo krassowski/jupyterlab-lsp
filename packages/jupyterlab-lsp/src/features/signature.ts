@@ -13,6 +13,8 @@ import { IRootPosition } from '../positioning';
 import { ILSPFeatureManager, PLUGIN_ID } from '../tokens';
 import { IEditorChange } from '../virtual/editor';
 
+const COMPLETER_ACTIVE_CLASS = 'jp-mod-completer-active';
+
 export class SignatureCM extends CodeMirrorIntegration {
   protected signature_character: IRootPosition;
   protected _signatureCharacters: string[];
@@ -141,10 +143,17 @@ export class SignatureCM extends CodeMirrorIntegration {
       root_position
     );
 
+    const editor = this.virtual_editor.find_ce_editor(cm_editor);
+
+    if (editor.host.classList.contains(COMPLETER_ACTIVE_CLASS)) {
+      // abort if completer is currently being displayed
+      return;
+    }
+
     this.lab_integration.tooltip.create({
       markup,
       position: editor_position,
-      ce_editor: this.virtual_editor.find_ce_editor(cm_editor),
+      ce_editor: editor,
       adapter: this.adapter,
       className: 'lsp-signature-help'
     });
