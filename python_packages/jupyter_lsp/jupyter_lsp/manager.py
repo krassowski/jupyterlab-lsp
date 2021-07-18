@@ -1,4 +1,4 @@
-""" A configurable frontend for stdio-based Language Servers
+""" A configurable frontend for stream-based Language Servers
 """
 import os
 import traceback
@@ -22,7 +22,11 @@ from .constants import (
     EP_SPEC_V1,
 )
 from .schema import LANGUAGE_SERVER_SPEC_MAP
-from .session import LanguageServerSession
+from .session import (
+    LanguageServerSessionBase,
+    LanguageServerSessionStdio,
+    LanguageServerSessionTCP,
+)
 from .trait_types import LoadableCallable, Schema
 from .types import (
     KeyedLanguageServerSpecs,
@@ -55,10 +59,10 @@ class LanguageServerManager(LanguageServerManagerAPI):
     )  # type: bool
 
     sessions = Dict_(
-        trait=Instance(LanguageServerSession),
+        trait=Instance(LanguageServerSessionBase),
         default_value={},
         help="sessions keyed by language server name",
-    )  # type: Dict[Tuple[Text], LanguageServerSession]
+    )  # type: Dict[Tuple[Text], LanguageServerSessionBase]
 
     virtual_documents_dir = Unicode(
         help="""Path to virtual documents relative to the content manager root
@@ -137,9 +141,21 @@ class LanguageServerManager(LanguageServerManagerAPI):
         """create, but do not initialize all sessions"""
         sessions = {}
         for language_server, spec in self.language_servers.items():
-            sessions[language_server] = LanguageServerSession(
-                language_server=language_server, spec=spec, parent=self
-            )
+            mode = spec.get("mode", "stdio")
+            if mode == "stdio":
+                sessions[language_server] = LanguageServerSessionStdio(
+                    language_server=language_server, spec=spec, parent=self
+                )
+            elif mode == "tcp":
+                sessions[language_server] = LanguageServerSessionTCP(
+                    language_server=language_server, spec=spec, parent=self
+                )
+            else:
+                raise ValueError(
+                    "Unknown session mode {} for language server '{}'".format(
+                        mode, language_server
+                    )
+                )
         self.sessions = sessions
 
     def init_listeners(self):
