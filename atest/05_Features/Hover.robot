@@ -46,7 +46,7 @@ Hover works in foreign code (javascript)
     # also for multiple cells of the same document
     Enter Cell Editor    3
     Trigger Tooltip    Math
-    Element Should Contain    ${HOVER_BOX}    Math: Math
+    Wait Until Keyword Succeeds    5x    0.1s     Element Should Contain    ${HOVER_BOX}    Math: Math
 
 
 *** Keywords ***
