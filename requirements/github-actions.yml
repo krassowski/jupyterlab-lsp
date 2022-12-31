@@ -34,6 +34,7 @@ dependencies:
   # test tools
   - pytest-asyncio
   - pytest-cov
+  - pytest-timeout
   # temporary pin added on 2022-12-28, if editing this file try to remove it:
   # pytoolconfig 1.2.4 depends on packaging>=22.0 which breaks `pip check`
   - pytoolconfig <1.2.4
