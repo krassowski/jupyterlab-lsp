@@ -1,5 +1,6 @@
 """ A session for managing a language server process
 """
+import asyncio
 import atexit
 import math
 import os
@@ -25,6 +26,7 @@ from traitlets.traitlets import MetaHasTraits
 from .connection import LspStreamReader, LspStreamWriter
 from .schema import LANGUAGE_SERVER_SPEC
 from .specs.utils import censored_spec
+from .threaded_child_watcher import ThreadedChildWatcher
 from .trait_types import Schema
 from .types import SessionStatus
 from .utils import get_unused_port
@@ -57,20 +59,22 @@ class LanguageServerSessionBase(
         Thread, help="worker thread for running an event loop", allow_none=True
     )
     main_loop = Instance(
-        IOLoop, help="the event loop of the main thread", allow_none=True)
+        IOLoop, help="the event loop of the main thread", allow_none=True
+    )
     thread_loop = Instance(
-        IOLoop, help="the event loop of the worker thread", allow_none=True)
+        IOLoop, help="the event loop of the worker thread", allow_none=True
+    )
     writer = Instance(LspStreamWriter, help="the JSON-RPC writer", allow_none=True)
     reader = Instance(LspStreamReader, help="the JSON-RPC reader", allow_none=True)
     from_lsp = Instance(
         StapledObjectStream,
         help="a queue for string messages from the server",
-        allow_none=True
+        allow_none=True,
     )
     to_lsp = Instance(
         StapledObjectStream,
         help="a queue for string messages to the server",
-        allow_none=True
+        allow_none=True,
     )
     handlers = Set(
         trait=Instance(WebSocketHandler),
@@ -81,14 +85,18 @@ class LanguageServerSessionBase(
     last_handler_message_at = Instance(datetime, allow_none=True)
     last_server_message_at = Instance(datetime, allow_none=True)
 
-    stop_timeout_s = Float(
+    stop_timeout = Float(
         5,
-        help="timeout in seconds after which a process will be terminated forcefully",
+        help="timeout in seconds after which a server process will be terminated forcefully",
+    ).tag(config=True)
+    start_timeout = Float(
+        240,
+        help="timeout in seconds after which server process startup will be aborted",
     ).tag(config=True)
     queue_size = Float(
         -1,
         help="the maximum number of messages that can be buffered in the queue or -1 "
-             "for an unbounded queue"
+        "for an unbounded queue",
     ).tag(config=True)
 
     _skip_serialize = ["argv", "debug_argv"]
@@ -123,9 +131,17 @@ class LanguageServerSessionBase(
         """
         self.main_loop = IOLoop.current()
         self.started.clear()
-        self.thread = Thread(target=anyio.run, kwargs={"func": self.run})
+
+        policy = asyncio.DefaultEventLoopPolicy()
+        if sys.version_info < (3, 8) and sys.platform != "win32":
+            policy.set_child_watcher(ThreadedChildWatcher())
+        self.thread = Thread(
+            target=anyio.run,
+            kwargs={"func": self.run, "backend_options": {"policy": policy}},
+            daemon=True,
+        )
         self.thread.start()
-        self.started.wait()
+        self.started.wait(timeout=self.start_timeout)
 
     def stop(self):
         """shut down the session"""
@@ -150,7 +166,7 @@ class LanguageServerSessionBase(
                 tg.start_soon(self._write_lsp)
                 tg.start_soon(self._broadcast_from_lsp)
         except Exception as e:  # pragma: no cover
-            self.log.exception("Execption while listening {}", e)
+            self.log.exception("Exception while listening %s", e)
         finally:
             await self.cleanup()
             self.cancelscope = None
@@ -178,7 +194,7 @@ class LanguageServerSessionBase(
             await self.writer.close()
             self.writer = None
         if self.process is not None:
-            await self.stop_process(self.stop_timeout_s)
+            await self.stop_process(self.stop_timeout)
             self.process = None
         if self.from_lsp is not None:
             await self.from_lsp.aclose()
@@ -260,9 +276,11 @@ class LanguageServerSessionBase(
         """create the queues"""
         queue_size = math.inf if self.queue_size < 0 else self.queue_size
         self.from_lsp = StapledObjectStream(
-            *anyio.create_memory_object_stream(max_buffer_size=queue_size))
+            *anyio.create_memory_object_stream(max_buffer_size=queue_size)
+        )
         self.to_lsp = StapledObjectStream(
-            *anyio.create_memory_object_stream(max_buffer_size=queue_size))
+            *anyio.create_memory_object_stream(max_buffer_size=queue_size)
+        )
 
     def substitute_env(self, env, base):
         final_env = copy(os.environ)

@@ -1,9 +1,9 @@
+import math
 import subprocess
 
 import anyio
-from anyio.streams.stapled import StapledObjectStream
-import math
 import pytest
+from anyio.streams.stapled import StapledObjectStream
 
 from jupyter_lsp.connection import LspStreamReader
 from jupyter_lsp.utils import get_unused_port
@@ -129,7 +129,8 @@ async def test_reader(
     message, repeats, interval, add_excess, mode, communicator_spawner
 ):
     queue = StapledObjectStream(
-        *anyio.create_memory_object_stream(max_buffer_size=math.inf))
+        *anyio.create_memory_object_stream(max_buffer_size=math.inf)
+    )
 
     port = get_unused_port() if mode == "tcp" else None
     process = await communicator_spawner.spawn_writer(

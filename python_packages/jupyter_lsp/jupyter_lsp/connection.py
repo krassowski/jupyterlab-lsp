@@ -13,8 +13,8 @@ from typing import Text
 # pylint: disable=broad-except
 import anyio
 from anyio.streams.buffered import BufferedByteReceiveStream
-from anyio.streams.text import TextSendStream
 from anyio.streams.stapled import StapledObjectStream
+from anyio.streams.text import TextSendStream
 from tornado.httputil import HTTPHeaders
 from traitlets import Instance, Int
 from traitlets.config import LoggingConfigurable

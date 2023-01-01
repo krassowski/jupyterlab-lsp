@@ -22,7 +22,7 @@ async def assert_status_set(handler, expected_statuses, language_server=None):
     assert statuses == expected_statuses, payload
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_start_known(known_server, handlers, jsonrpc_init_msg):
     """will a process start for a known server if a handler starts?"""
     handler, ws_handler = handlers
