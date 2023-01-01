@@ -26,7 +26,6 @@ from traitlets.traitlets import MetaHasTraits
 from .connection import LspStreamReader, LspStreamWriter
 from .schema import LANGUAGE_SERVER_SPEC
 from .specs.utils import censored_spec
-from .threaded_child_watcher import ThreadedChildWatcher
 from .trait_types import Schema
 from .types import SessionStatus
 from .utils import get_unused_port
@@ -87,7 +86,8 @@ class LanguageServerSessionBase(
 
     stop_timeout = Float(
         5,
-        help="timeout in seconds after which a server process will be terminated forcefully",
+        help="timeout in seconds after which a server process will be terminated "
+        "forcefully",
     ).tag(config=True)
     start_timeout = Float(
         240,
@@ -132,9 +132,17 @@ class LanguageServerSessionBase(
         self.main_loop = IOLoop.current()
         self.started.clear()
 
-        policy = asyncio.DefaultEventLoopPolicy()
-        if sys.version_info < (3, 8) and sys.platform != "win32":
-            policy.set_child_watcher(ThreadedChildWatcher())
+        if sys.platform == "win32":
+            # harmonizes event loop across Python version on Windows.
+            # Python <3.8 did not use ProactorEventLoop as default.
+            # ProactorEventLoop supports subprocesses.
+            policy = asyncio.WindowsProactorEventLoopPolicy()
+        else:
+            policy = asyncio.DefaultEventLoopPolicy()
+            if sys.version_info < (3, 8):
+                from .threaded_child_watcher import ThreadedChildWatcher
+
+                policy.set_child_watcher(ThreadedChildWatcher())
         self.thread = Thread(
             target=anyio.run,
             kwargs={"func": self.run, "backend_options": {"policy": policy}},

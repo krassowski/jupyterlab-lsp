@@ -53,6 +53,7 @@ products or services of Licensee, or any third party.
 agrees to be bound by the terms and conditions of this License
 Agreement.
 """
+# flake8: noqa
 import itertools
 import os
 import threading
