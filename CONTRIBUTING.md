@@ -469,5 +469,7 @@ Adjust `loggingLevel` in the `Advanced Settings Editor` -> `Language Server` to 
 For robot tests set:
 
 ```robot
-Configure JupyterLab Plugin  {"loggingConsole": "floating", "loggingLevel": "debug"}
+Configure JupyterLab Plugin  {"loggingLevel": "debug", "logAllCommunication": true}
 ```
+
+The console output will be included in the `geckodriver.log` file.

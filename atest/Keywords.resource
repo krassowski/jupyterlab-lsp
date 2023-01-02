@@ -8,6 +8,7 @@ Resource    Variables.resource
 Library     ./logcheck.py
 Library     ./ports.py
 Library     ./config.py
+Library     ./firefox_log_to_stdout.py
 
 
 *** Keywords ***
@@ -122,10 +123,12 @@ Open JupyterLab
     Should Not Be Equal As Strings    ${geckodriver}    None
     ...    geckodriver not found, do you need to install firefox-geckodriver?
     ${service args} =    Create List    --log    debug
+    ${profile_path} =    Create Firefox Profile Logging To Stdout
     Create WebDriver    Firefox
     ...    executable_path=${geckodriver}
     ...    service_log_path=${GECKODRIVER LOG}
     ...    service_args=${service args}
+    ...    firefox_profile=${profile_path}
     Wait Until Keyword Succeeds    3x    5s    Wait For Splash
 
 Close JupyterLab
