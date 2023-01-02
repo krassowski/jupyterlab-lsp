@@ -54,6 +54,7 @@ agrees to be bound by the terms and conditions of this License
 Agreement.
 """
 # flake8: noqa
+# pragma: no cover
 import itertools
 import os
 import threading

@@ -132,14 +132,14 @@ class LanguageServerSessionBase(
         self.main_loop = IOLoop.current()
         self.started.clear()
 
-        if sys.platform == "win32":
+        if sys.platform == "win32":  # pragma: no cover
             # harmonizes event loop across Python version on Windows.
             # Python <3.8 did not use ProactorEventLoop as default.
             # ProactorEventLoop supports subprocesses.
             policy = asyncio.WindowsProactorEventLoopPolicy()
         else:
             policy = asyncio.DefaultEventLoopPolicy()
-            if sys.version_info < (3, 8):
+            if sys.version_info < (3, 8):  # pragma: no cover
                 from .threaded_child_watcher import ThreadedChildWatcher
 
                 policy.set_child_watcher(ThreadedChildWatcher())
