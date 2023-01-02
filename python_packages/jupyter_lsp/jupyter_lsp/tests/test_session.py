@@ -1,12 +1,14 @@
 import asyncio
+import os
+from sys import platform
 
 import pytest
 
 from ..schema import SERVERS_RESPONSE
 
 
-def assert_status_set(handler, expected_statuses, language_server=None):
-    handler.get()
+async def assert_status_set(handler, expected_statuses, language_server=None):
+    await handler.get()
     payload = handler._payload
 
     errors = list(SERVERS_RESPONSE.iter_errors(payload))
@@ -20,7 +22,7 @@ def assert_status_set(handler, expected_statuses, language_server=None):
     assert statuses == expected_statuses, payload
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_start_known(known_server, handlers, jsonrpc_init_msg):
     """will a process start for a known server if a handler starts?"""
     handler, ws_handler = handlers
@@ -28,13 +30,13 @@ async def test_start_known(known_server, handlers, jsonrpc_init_msg):
 
     manager.initialize()
 
-    assert_status_set(handler, {"not_started"})
+    await assert_status_set(handler, {"not_started"})
 
-    ws_handler.open(known_server)
+    await ws_handler.open(known_server)
     session = manager.sessions[ws_handler.language_server]
     assert session.process is not None
 
-    assert_status_set(handler, {"started"}, known_server)
+    await assert_status_set(handler, {"started"}, known_server)
 
     await ws_handler.on_message(jsonrpc_init_msg)
 
@@ -50,8 +52,8 @@ async def test_start_known(known_server, handlers, jsonrpc_init_msg):
     assert not session.handlers
     assert not session.process
 
-    assert_status_set(handler, {"stopped"}, known_server)
-    assert_status_set(handler, {"stopped", "not_started"})
+    await assert_status_set(handler, {"stopped"}, known_server)
+    await assert_status_set(handler, {"stopped", "not_started"})
 
 
 @pytest.mark.asyncio
@@ -61,18 +63,18 @@ async def test_start_unknown(known_unknown_server, handlers, jsonrpc_init_msg):
     manager = handler.manager
     manager.initialize()
 
-    assert_status_set(handler, {"not_started"})
+    await assert_status_set(handler, {"not_started"})
 
-    ws_handler.open(known_unknown_server)
+    await ws_handler.open(known_unknown_server)
 
-    assert_status_set(handler, {"not_started"})
+    await assert_status_set(handler, {"not_started"})
 
     await ws_handler.on_message(jsonrpc_init_msg)
-    assert_status_set(handler, {"not_started"})
+    await assert_status_set(handler, {"not_started"})
     ws_handler.on_close()
 
     assert not manager.sessions.get(ws_handler.language_server)
-    assert_status_set(handler, {"not_started"})
+    await assert_status_set(handler, {"not_started"})
 
 
 @pytest.mark.asyncio
@@ -92,7 +94,7 @@ async def test_ping(handlers):
 
     assert ws_handler._ping_sent is False
 
-    ws_handler.open(a_server)
+    await ws_handler.open(a_server)
 
     assert ws_handler.ping_callback is not None and ws_handler.ping_callback.is_running
     await asyncio.sleep(ws_handler.ping_interval * 3)
@@ -100,3 +102,46 @@ async def test_ping(handlers):
     assert ws_handler._ping_sent is True
 
     ws_handler.on_close()
+
+
+def exists_process_with_pid(pid):
+    try:
+        os.kill(pid, 0)
+    except OSError:
+        return False
+    else:
+        return True
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "timeout", [0, 5], ids=["terminate immediately", "after 5 seconds"]
+)
+async def test_stop(handlers, timeout):
+    """Test whether process will stop gracefully or forcefully"""
+    a_server = "pylsp"
+
+    handler, ws_handler = handlers
+    manager = handler.manager
+
+    manager.initialize()
+
+    await ws_handler.open(a_server)
+
+    session = manager.sessions[ws_handler.language_server]
+    session.stop_timeout = timeout
+
+    process_pid = session.process.pid
+    assert exists_process_with_pid(process_pid) is True
+
+    ws_handler.on_close()
+
+    if platform.startswith("win32"):  # pragma: no cover
+        # currently we cannot forcefully terminate the process on windows, so we just
+        # give it a little more extra time to finish on its own
+        await asyncio.sleep(timeout + 10)
+    else:  # pragma: no cover
+        # linux and darwin
+        await asyncio.sleep(timeout + 2)
+
+    assert exists_process_with_pid(process_pid) is False
