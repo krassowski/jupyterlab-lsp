@@ -123,7 +123,7 @@ Open JupyterLab
     Should Not Be Equal As Strings    ${geckodriver}    None
     ...    geckodriver not found, do you need to install firefox-geckodriver?
     ${service args} =    Create List    --log    debug
-    ${profile_path} =    Create Firefox Profile Logging To Stdout
+    ${profile_path} =    Create Firefox Profile Logging To Stdout    enable_logging=${LOG_CONSOLE}
     Create WebDriver    Firefox
     ...    executable_path=${geckodriver}
     ...    service_log_path=${GECKODRIVER LOG}

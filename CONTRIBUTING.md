@@ -472,4 +472,10 @@ For robot tests set:
 Configure JupyterLab Plugin  {"loggingLevel": "debug", "logAllCommunication": true}
 ```
 
-The console output will be included in the `geckodriver.log` file.
+The console output will be included in the `geckodriver.log` file for tests which were re-run after failing.
+
+To manually toggle writing of JavaScript browser console to `geckodriver.log` use:
+
+```bash
+python scripts/atest.py --variable LOG_CONSOLE:1
+```

@@ -85,7 +85,13 @@ def atest(attempt, extra_args):
     if attempt != 1:
         previous = OUT / f"{get_stem(attempt - 1, extra_args)}.robot.xml"
         if previous.exists():
-            extra_args += ["--rerunfailed", str(previous)]
+            # only intercept `console.log` in re-runs to prevent substantial overhead
+            extra_args += [
+                "--rerunfailed",
+                str(previous),
+                "--variable",
+                "LOG_CONSOLE:1",
+            ]
 
     out_dir = OUT / stem
 
