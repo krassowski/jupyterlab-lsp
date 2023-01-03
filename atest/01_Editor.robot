@@ -42,8 +42,10 @@ JSX
 
 LaTeX
     [Tags]    language:latex
+    Configure JupyterLab Plugin    {"loggingLevel": "debug", "logAllCommunication": true}
     ${def} =    Set Variable    xpath:(//span[contains(@class, 'cm-atom')][contains(text(), 'foo')])[last()]
     Editor Shows Features for Language    LaTeX    example.tex    Jump to Definition=${def}    Rename=${def}
+    Reset Plugin Settings
 
 Less
     ${def} =    Set Variable    xpath:(//span[contains(@class, 'cm-variable-2')][contains(text(), '@width')])[last()]

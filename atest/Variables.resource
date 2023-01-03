@@ -17,6 +17,7 @@ ${VIRTUALDOCS DIR}              ${NOTEBOOK DIR}${/}.virtual_documents
 ${SCREENSHOTS DIR}              ${OUTPUT DIR}${/}screenshots
 # override with `python scripts/atest.py --variable HEADLESS:0`
 ${HEADLESS}                     1
+${LOG_CONSOLE}                  0
 ${CMD PALETTE INPUT}            css:#command-palette .lm-CommandPalette-input
 ${CMD PALETTE ITEM ACTIVE}      css:#command-palette .lm-CommandPalette-item.lm-mod-active
 ${JLAB XP TOP}                  //div[@id='jp-top-panel']

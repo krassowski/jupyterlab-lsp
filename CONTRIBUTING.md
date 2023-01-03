@@ -469,5 +469,13 @@ Adjust `loggingLevel` in the `Advanced Settings Editor` -> `Language Server` to 
 For robot tests set:
 
 ```robot
-Configure JupyterLab Plugin  {"loggingConsole": "floating", "loggingLevel": "debug"}
+Configure JupyterLab Plugin  {"loggingLevel": "debug", "logAllCommunication": true}
+```
+
+The console output will be included in the `geckodriver.log` file for tests which were re-run after failing.
+
+To manually toggle writing of JavaScript browser console to `geckodriver.log` use:
+
+```bash
+python scripts/atest.py --variable LOG_CONSOLE:1
 ```
