@@ -252,7 +252,7 @@ jobs:
         run: conda list
 
       - name: Remove `jupyter-lsp` installed with JupyterLab
-        run: conda remove jupyter-lsp
+        run: conda remove jupyter-lsp --force
 
       - name: Cache node_modules
         id: cache-node-modules
