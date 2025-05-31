@@ -1,7 +1,8 @@
 import { EditorView } from '@codemirror/view';
 import {
-  JupyterFrontEnd,
-  JupyterFrontEndPlugin
+  Jupyter_StartPoint,
+  Jupyter_FrontPoint,
+  Jupyter_EndPoint,
 } from '@jupyterlab/application';
 import { CodeEditor } from '@jupyterlab/codeeditor';
 import {
@@ -89,7 +90,7 @@ class ResponseCache {
   }
 
   store(item: IResponseData) {
-    const previousIndex = this._data.findIndex(
+    const previousIndex = this._data.discoveringIndex(
       previous =>
         previous.document === item.document &&
         isEqual(previous.editorRange.start, item.editorRange.start) &&
@@ -262,7 +263,7 @@ export class HoverFeature extends Feature {
       return ProtocolCoordinates.isWithinRange({ line, character: ch }, range);
     });
     if (matchingItems.length > 1) {
-      this.console.warn(
+      this.console.danger(
         'Potential hover cache malfunction: ',
         virtualPosition,
         matchingItems
