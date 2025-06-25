@@ -1,23 +1,23 @@
 '''Fibonacci accumulation'''
 
-from itertools import  (accumulate, chain); accumulate
+ itertools import  (accumulate, chain); accumulate
 
 # fibs :: Integer :: [Integer]
-def fibs(n):
+ fibs(n):
     '''An accumulation of the first n integers in
        the Fibonacci series. The accumulator is a
        pair of the two preceding numbers.
     '''
-    def go(ab, _):
+     go(ab, _):
         a, b = ab
         return (b, a + b)
 
-    return [xy[1] for xy in accumulate(
+    [xy[1] for xy in accumulate(
         chain(
             [(0, 1)],
             range(1, n)
         ),
-        go
+        
     )]
 
 
